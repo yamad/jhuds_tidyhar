@@ -77,18 +77,26 @@ makeFullDataset <- function() {
     left_join(activity.labels, by="activity.id") %>%
     select(-(activity.id))
 
-  ## return tidy data
-  full %>%
+  ## tidy data
+  full <- full %>%
     gather(measure, value, -subject, -activity, -point) %>%
     separate(measure, into=c("measure", "statistic", "axis")) %>%
     spread(statistic, value) %>%
     arrange(subject, activity, measure, axis)
+  
+  ## decompose measurement variable names
+  full$domain <- ifelse(grepl("^f", full$measure), "freq", "time")
+  full$sensor <- ifelse(grepl("Acc", full$measure), "accelerometer", "gyroscope")
+  full$measuretype <- ifelse(grepl("Body", full$measure), "body", "gravity")
+  full$jerk <- grepl("Jerk", full$measure)
+  full$magnitude <- grepl("Mag", full$measure)  
+  full %>% select(subject:axis, domain:magnitude, mean:std)
 }
 
 ## combined and tidied dataset
 har_full <- makeFullDataset()
 # average over points by subject, activity, and measurement variable
 har_averages <- har_full %>% 
-  group_by(subject, activity, measure, axis) %>% 
+  group_by(subject, activity, measure, axis, domain, sensor, measuretype, jerk, magnitude) %>% 
   summarize(avg=mean(mean), std=sd(mean)) %>%
   rename(mean=avg)

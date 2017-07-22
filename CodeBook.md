@@ -15,7 +15,8 @@ statistics for each signal are available in the original dataset.
 
 The full dataset for all subjects, activities, and variables is
 calculated by the `makeFullDataset` function in `run_analysis.R`. By
-default, this dataset is saved as `har_full`, consiting of 7 variables:
+default, this dataset is saved as `har_full`, consisting of the
+following columns:
 
   1. **subject** identifier for the human subject who performed the
      activity, by integer id 1-30.
@@ -34,11 +35,22 @@ default, this dataset is saved as `har_full`, consiting of 7 variables:
      applicable. e.g. body acceleration is measured along X, Y, and Z
      axes.
 
-  6. **mean** the mean value for the *measured* variable in an
+  6. **domain:magnitude** decomposition of *measure* names into 5
+     variables. Together, these render the *measure* column redundant,
+     but we retain *measure* because it will be generally easier to
+     use, even if more cryptic:
+
+     6. *domain* (freq/time)
+     7. *sensor* (accelerometer/gyroscope)
+     8. *measuretype* (body/gravity)
+     9. *jerk* (boolean)
+     10. *magnitude* (boolean)
+
+  11. **mean** the mean value for the *measured* variable in an
      128-sample window, indicated by *point*. Values are normalized
      and bounded within [-1, 1].
 
-  7. **std** the standard deviation of the measured variable in the
+  12. **std** the standard deviation of the measured variable in the
      window.
 
 ### Averages data frame - `har_averages`
