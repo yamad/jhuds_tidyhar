@@ -21,73 +21,73 @@ library(tibble)
 ##
 ## note: using a function to avoid polluting global namespace with temporary variables
 makeFullDataset <- function() {
-
-  features <- read.table("features.txt", col.names=c("col.id", "name"))
-  features$col.id <- features$col.id + 2  # first two cols aren't listed in features table
-  features <- features %>%                # get only mean and stddev stats
-    filter(grepl("(mean|std)\\(", name))  #   trailing parens excludes `meanFreq` features
-
-  ## prepare dataset of type "train" or "test"
-  ##
-  ## these processing steps are identical in training and test sets
-  prepDataset <- function(dataset.type) {
-    # names
-    dir <- file.path(getwd(), dataset.type)
-    df.fname <- paste("X_", dataset.type, ".txt", sep="")          # e.g. train/X_train.txt
-    activity.fname <- paste("y_", dataset.type, ".txt", sep="")    # e.g. train/y_train.txt
-    subj.fname <- paste("subject_", dataset.type, ".txt", sep="")  # e.g. train/subject_train.txt
-
-    df <- as_tibble(read.table(file.path(dir, df.fname)))
-    # subset desired features to reduce data ASAP
-    df <- df[,features$col.id]
-    names(df) <- features$name
-
-    # load subject and activity ids for each row in dataset
-    subj <- read.table(file.path(dir, subj.fname), col.names=c("subject"))
-    act <- read.table(file.path(dir, activity.fname), col.names=c("activity"))
-    df <- cbind(df, subj, act)
-
-    # mark series of points as signals (implicit from repeated rows by
-    # subject and activity)
-    df <- df %>% group_by(subject, activity) %>%
-      mutate(point=row_number()) %>%
-      ungroup
-
-    df # return prepped data.frame
-  }
-
-  ## Combine datasets
-  ## -----------------------------
-  train <- prepDataset("train")
-  test <- prepDataset("test")
-  full <- bind_rows(train, test)
-
-  ## use activity names
-  ## normalize activity labels to lowercase with period (.) separators
-  activity.labels <- read.table("activity_labels.txt", col.names=c("id", "label"))
-  activity.labels$label <- tolower(gsub("_", ".", activity.labels$label))
-  full$activity <- factor(full$activity, levels=activity.labels$id, labels=activity.labels$label)
-
-  ## tidy data into long format
-  full <- full %>%
-    gather(measure, value, -subject, -activity, -point) %>%
-    separate(measure, into=c("measure", "statistic", "axis")) %>%
-    spread(statistic, value) %>%
-    arrange(subject, activity, measure, axis)
-  
-  ## decompose measurement variable names
-  full$domain <- ifelse(grepl("^f", full$measure), "freq", "time")
-  full$sensor <- ifelse(grepl("Acc", full$measure), "accelerometer", "gyroscope")
-  full$measuretype <- ifelse(grepl("Body", full$measure), "body", "gravity")
-  full$jerk <- grepl("Jerk", full$measure)
-  full$magnitude <- grepl("Mag", full$measure)  
-  full %>% select(subject:axis, domain:magnitude, mean:std)
+    
+    features <- read.table("features.txt", col.names=c("col.id", "name"))
+    features$col.id <- features$col.id + 2  # first two cols aren't listed in features table
+    features <- features %>%                # get only mean and stddev stats
+        filter(grepl("(mean|std)\\(", name))  #   trailing parens excludes `meanFreq` features
+    
+    ## prepare dataset of type "train" or "test"
+    ##
+    ## these processing steps are identical in training and test sets
+    prepDataset <- function(dataset.type) {
+        # names
+        dir <- file.path(getwd(), dataset.type)
+        df.fname <- paste("X_", dataset.type, ".txt", sep="")          # e.g. train/X_train.txt
+        activity.fname <- paste("y_", dataset.type, ".txt", sep="")    # e.g. train/y_train.txt
+        subj.fname <- paste("subject_", dataset.type, ".txt", sep="")  # e.g. train/subject_train.txt
+        
+        df <- as_tibble(read.table(file.path(dir, df.fname)))
+        # subset desired features to reduce data ASAP
+        df <- df[,features$col.id]
+        names(df) <- features$name
+        
+        # load subject and activity ids for each row in dataset
+        subj <- read.table(file.path(dir, subj.fname), col.names=c("subject"))
+        act <- read.table(file.path(dir, activity.fname), col.names=c("activity"))
+        df <- cbind(df, subj, act)
+        
+        # mark series of points as signals (implicit from repeated rows by
+        # subject and activity)
+        df <- df %>% group_by(subject, activity) %>%
+            mutate(point=row_number()) %>%
+            ungroup
+        
+        df # return prepped data.frame
+    }
+    
+    ## Combine datasets
+    ## -----------------------------
+    train <- prepDataset("train")
+    test <- prepDataset("test")
+    full <- bind_rows(train, test)
+    
+    ## use activity names
+    ## normalize activity labels to lowercase with period (.) separators
+    activity.labels <- read.table("activity_labels.txt", col.names=c("id", "label"))
+    activity.labels$label <- tolower(gsub("_", ".", activity.labels$label))
+    full$activity <- factor(full$activity, levels=activity.labels$id, labels=activity.labels$label)
+    
+    ## tidy data into long format
+    full <- full %>%
+        gather(measure, value, -subject, -activity, -point) %>%
+        separate(measure, into=c("measure", "statistic", "axis")) %>%
+        spread(statistic, value) %>%
+        arrange(subject, activity, measure, axis)
+    
+    ## decompose measurement variable names
+    full$domain <- ifelse(grepl("^f", full$measure), "freq", "time")
+    full$sensor <- ifelse(grepl("Acc", full$measure), "accelerometer", "gyroscope")
+    full$measuretype <- ifelse(grepl("Body", full$measure), "body", "gravity")
+    full$jerk <- grepl("Jerk", full$measure)
+    full$magnitude <- grepl("Mag", full$measure)  
+    full %>% select(subject:axis, domain:magnitude, mean:std)
 }
 
 ## combined and tidied dataset
 har_full <- makeFullDataset()
 # average over points by subject, activity, and measurement variable
 har_averages <- har_full %>% 
-  group_by(subject, activity, measure, axis, domain, sensor, measuretype, jerk, magnitude) %>% 
-  summarize(avg=mean(mean), std=sd(mean)) %>%
-  rename(mean=avg)
+    group_by(subject, activity, measure, axis, domain, sensor, measuretype, jerk, magnitude) %>% 
+    summarize(avg=mean(mean), std=sd(mean)) %>%
+    rename(mean=avg)
