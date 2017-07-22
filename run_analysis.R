@@ -21,18 +21,11 @@ library(tibble)
 ##
 ## note: using a function to avoid polluting global namespace with temporary variables
 makeFullDataset <- function() {
-  ## load auxillary tables
-  activity.labels <- read.table("activity_labels.txt",
-                                col.names=c("activity.id", "activity"))
-  # normalize names to use "." dots and lowercase
-  activity.labels$activity <- tolower(gsub("_", ".", activity.labels$activity))
 
-  features <- read.table("features.txt",
-                         col.names=c("col.id", "name"))
+  features <- read.table("features.txt", col.names=c("col.id", "name"))
   features$col.id <- features$col.id + 2  # first two cols aren't listed in features table
   features <- features %>%                # get only mean and stddev stats
     filter(grepl("(mean|std)\\(", name))  #   trailing parens excludes `meanFreq` features
-
 
   ## prepare dataset of type "train" or "test"
   ##
@@ -50,16 +43,13 @@ makeFullDataset <- function() {
     names(df) <- features$name
 
     # load subject and activity ids for each row in dataset
-    subj <- read.table(file.path(dir, subj.fname), col.names=c("subject.id"))
-    act <- read.table(file.path(dir, activity.fname), col.names=c("activity.id"))
-
-    # add/join identifying variables for each row
-    df$subject <- subj$subject.id
-    df$activity.id <- act$activity.id
+    subj <- read.table(file.path(dir, subj.fname), col.names=c("subject"))
+    act <- read.table(file.path(dir, activity.fname), col.names=c("activity"))
+    df <- cbind(df, subj, act)
 
     # mark series of points as signals (implicit from repeated rows by
     # subject and activity)
-    df <- df %>% group_by(subject, activity.id) %>%
+    df <- df %>% group_by(subject, activity) %>%
       mutate(point=row_number()) %>%
       ungroup
 
@@ -73,11 +63,12 @@ makeFullDataset <- function() {
   full <- bind_rows(train, test)
 
   ## use activity names
-  full <- full %>%
-    left_join(activity.labels, by="activity.id") %>%
-    select(-(activity.id))
+  ## normalize activity labels to lowercase with period (.) separators
+  activity.labels <- read.table("activity_labels.txt", col.names=c("id", "label"))
+  activity.labels$label <- tolower(gsub("_", ".", activity.labels$label))
+  full$activity <- factor(full$activity, levels=activity.labels$id, labels=activity.labels$label)
 
-  ## tidy data
+  ## tidy data into long format
   full <- full %>%
     gather(measure, value, -subject, -activity, -point) %>%
     separate(measure, into=c("measure", "statistic", "axis")) %>%
