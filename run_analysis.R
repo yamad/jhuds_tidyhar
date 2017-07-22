@@ -13,34 +13,21 @@ library(dplyr)
 library(tidyr)
 library(tibble)
 
-## Create combined data frame from training and test data. Downloads dataset, if required.
+## Create combined data frame from training and test data.
+## 
+## Assumes working directorycontains file and folder structure 
+## from the dataset zip file, as downloaded by `download_data.R`.
+## This is specified behavior from assignment instructions.
 ##
 ## note: using a function to avoid polluting global namespace with temporary variables
 makeFullDataset <- function() {
-  ## dataset description/variables
-  dataUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
-  localZip <- "./uci_har_data.zip"
-  localDir <- "./UCI HAR Dataset"
-
-
-  ## Get data
-  ## -----------------------------
-  if (!dir.exists(localDir)) {
-    download.file(dataUrl, destfile=localZip)
-    unzip(localZip)
-  }
-
-
-  ## Load data
-  ## -----------------------------
-
   ## load auxillary tables
-  activity.labels <- read.table(file.path(localDir, "activity_labels.txt"),
+  activity.labels <- read.table("activity_labels.txt",
                                 col.names=c("activity.id", "activity"))
   # normalize names to use "." dots and lowercase
   activity.labels$activity <- tolower(gsub("_", ".", activity.labels$activity))
 
-  features <- read.table(file.path(localDir, "features.txt"),
+  features <- read.table("features.txt",
                          col.names=c("col.id", "name"))
   features$col.id <- features$col.id + 2  # first two cols aren't listed in features table
   features <- features %>%                # get only mean and stddev stats
@@ -52,10 +39,10 @@ makeFullDataset <- function() {
   ## these processing steps are identical in training and test sets
   prepDataset <- function(dataset.type) {
     # names
-    dir <- file.path(localDir, dataset.type)                       # e.g. UCI HAR Dataset/train
-    df.fname <- paste("X_", dataset.type, ".txt", sep="")          # e.g. X_train.txt
-    activity.fname <- paste("y_", dataset.type, ".txt", sep="")    # e.g. y_train.txt
-    subj.fname <- paste("subject_", dataset.type, ".txt", sep="")  # e.g. subject_train.txt
+    dir <- file.path(getwd(), dataset.type)
+    df.fname <- paste("X_", dataset.type, ".txt", sep="")          # e.g. train/X_train.txt
+    activity.fname <- paste("y_", dataset.type, ".txt", sep="")    # e.g. train/y_train.txt
+    subj.fname <- paste("subject_", dataset.type, ".txt", sep="")  # e.g. train/subject_train.txt
 
     df <- as_tibble(read.table(file.path(dir, df.fname)))
     # subset desired features to reduce data ASAP
