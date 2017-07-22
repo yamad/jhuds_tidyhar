@@ -24,11 +24,11 @@ default, this dataset is saved as `har_full`, consiting of 7 variables:
      activity, measure/axis, and subject (e.g. 1 is the first point in
      the signal).
 
-  3. **activity** the activity performed. one of 6: { walking,
-     walking.upstairs, walking.downstairs, sitting, standing, laying }.
+  3. **activity** the activity performed: walking,
+     walking.upstairs, walking.downstairs, sitting, standing, or laying.
 
-  4. **measure** the measured variable. one of 17, see [Measures] for
-     descriptions.
+  4. **measure** the measured variable. one of 17,
+     see [Measures](#measures) for descriptions.
 
   5. **axis** the axis of the measured variable, if
      applicable. e.g. body acceleration is measured along X, Y, and Z
@@ -41,7 +41,7 @@ default, this dataset is saved as `har_full`, consiting of 7 variables:
   7. **std** the standard deviation of the measured variable in the
      window.
 
-## Averages data frame -- `har_averages`
+### Averages data frame - `har_averages`
 
 The `har_averages` data frame has the same structure as the `har_full`
 data frame, except that values have been averaged across the
@@ -52,7 +52,7 @@ the signal. That is, we summarize over the **point** column from
 in the signal, so that only one value for any combination of subject,
 activity, measure, and axis is given.
 
-## Original data description
+### Original data description
 
 (modified from README.txt from
 https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip)
@@ -79,7 +79,7 @@ cutoff frequency was used. From each window, a vector of features was
 obtained by calculating variables from the time and frequency
 domain. See 'features_info.txt' for more details.
 
-## Measures
+## Measures<a name="measures"></a>
 
 (modified from README.txt from
 https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip)
