@@ -14,7 +14,7 @@ by Jeff Leek and colleagues.
 
 ## Usage
 
-Load the `downlad_data.R` script, change the working directory to
+Load the `download_data.R` script, change the working directory to
 downloaded and unzipped data directory, and then load the
 `run_analysis.R` script into an R session:
 
