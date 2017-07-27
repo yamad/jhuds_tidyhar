@@ -7,9 +7,8 @@
 The dataset contains accelerometer and gyroscope information for 30
 human _subjects_ each performing 6 _activities_ while wearing a
 smartphone. Short time and frequency domain signals were calculated
-for various variables, as described below. The mean and standard
-deviation for each variable are provided in this tidy dataset. More
-statistics for each signal are available in the original dataset.
+for various variables, as described below. See
+the [original data description](#orig-data) for more information.
 
 ### Full dataset data frame - `har_full`
 
@@ -21,50 +20,88 @@ following columns:
   1. **subject** identifier for the human subject who performed the
      activity, by integer id 1-30.
 
-  2. **point** the point in the signal sequence for the given.
-     activity, measure/axis, and subject (e.g. 1 is the first point in
-     the signal).
+  2. **activity** the activity performed by the subject: walking,
+     walking\_upstairs, walking\_downstairs, sitting, standing, or
+     laying.
 
-  3. **activity** the activity performed: walking,
-     walking.upstairs, walking.downstairs, sitting, standing, or laying.
+  3. **measure** the measured variable (e.g. "fBodyAcc-X"). one of 33
+     possibilites, see [measures](#measures) for further description.
 
-  4. **measure** the measured variable. one of 17,
-     see [Measures](#measures) for descriptions.
+  4. **point** the point in the signal sequence for the given
+     activity, measure, and subject (e.g. 1 is the first point in the
+     signal).
 
-  5. **axis** the axis of the measured variable, if
-     applicable. e.g. body acceleration is measured along X, Y, and Z
-     axes.
-
-  6. **domain:magnitude** decomposition of *measure* names into 5
-     variables. Together, these render the *measure* column redundant,
-     but we retain *measure* because it will be generally easier to
-     use, even if more cryptic:
-
-     6. *domain* (freq/time)
-     7. *sensor* (accelerometer/gyroscope)
-     8. *measuretype* (body/gravity)
-     9. *jerk* (boolean)
-     10. *magnitude* (boolean)
-
-  11. **mean** the mean value for the *measured* variable in an
+  5. **mean** the mean value for the *measured* variable in an
      128-sample window, indicated by *point*. Values are normalized
      and bounded within [-1, 1].
 
-  12. **std** the standard deviation of the measured variable in the
+  6. **std** the standard deviation of the measured variable in the
      window.
 
 ### Averages data frame - `har_averages`
 
-The `har_averages` data frame has the same structure as the `har_full`
-data frame, except that values have been averaged across the
-signal. That is, the **mean** and **std** columns indicate the mean
-and standard deviation of the measured variable across all points in
-the signal. That is, we summarize over the **point** column from
-`har_full`, taking the average of the given mean value for each point
-in the signal, so that only one value for any combination of subject,
-activity, measure, and axis is given.
+`har_averages` gives the **mean** and standard deviation **std** of
+the signal for each combination of subject, activity, and measure.
 
-### Original data description
+## Transformations of the original dataset
+
+The original dataset was transformed into a _long_ tidy format,
+meaning that an observation (row) consists of a measurement and its
+statistics for each subject and activity.
+
+ * Data are combined from the training and test datasets (Users may
+   want to make their own subsets).
+ * Only mean and standard deviation statistics are preserved.
+ * Statistics are placed in their own columns, so the names "-mean()"
+   and "-std()" are removed from the variable names
+
+### _long_ tidy format
+
+The tidy data concept leaves the notion of _observation_ and
+_variable_ up for interpretation.
+
+In this case, the _long_ tidy format was chosen in preference to the
+_wide_ format. In the wide format, each column has to represent both a
+measurement _and_ a statistic (e.g. "fBodyAcc-mean()-X",
+"fBodyAcc-std()-X"). If a new statistic is calculated, a new column
+has to be added for every combination of measurement and statistic.
+
+The long format does not have this fault. It separates the idea of a
+particular type of measurement (`fBodyAcc-X`) and any statistics on
+that measurement (mean, std, etc.). In the tidy data terminology, the
+measurement type is therefore a variable. Note that this format
+provides a very natural extension for adding new statistics. A new
+statistic is just one new column in a long tidy format.
+
+### Measure naming
+
+The measure names have several abbreviations and are therefore
+somewhat cryptic. We have chosen not to change the names of the
+measurements from the original dataset for the following reasons:
+
+  * provenance of each point in the original data is much clearer,
+  * names become unwieldy when the abbreviations are not used,
+  * decomposing the names into components helps clarity some but is
+    cumbersome for data transformations
+
+The same measurements made along different axes are considered to be
+separate measures. For example, `fBodyAcc-X` is a different
+measurement from `fBodyAcc-Y`. This simplifies the data structure
+because not all measures have axes.
+
+#### Measure abbreviation key
+
+ | abbrev. | description |
+ | ------- | ----------- |
+ | f*      | frequency domain signal |
+ | t*      | time domain signal |
+ | Acc     | accelerometer data |
+ | Gyro    | gyroscope data |
+ | Jerk    | jerk, calculated from linear acceleration and angular velocity |
+ | Mag     | magnitude, Euclidean norm of 3D signals |
+ | -X, -Y, -Z | axis of measurement |
+
+## Original data description<a href="#orig-data"></a>
 
 (modified from README.txt from
 https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip)

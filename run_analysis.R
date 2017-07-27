@@ -15,11 +15,11 @@ library(tibble)
 
 ## Create combined data frame from training and test data.
 ## 
-## Assumes working directorycontains file and folder structure 
+## Assumes working directory contains file and folder structure
 ## from the dataset zip file, as downloaded by `download_data.R`.
 ## This is specified behavior from assignment instructions.
 ##
-## note: using a function to avoid polluting global namespace with temporary variables
+## note: wrapping function avoids polluting global namespace with temporary variables
 makeFullDataset <- function() {
     
     features <- read.table("features.txt", col.names=c("col.id", "name"))
@@ -58,36 +58,38 @@ makeFullDataset <- function() {
     
     ## Combine datasets
     ## -----------------------------
+    # train.data <- read.table(file.path("train", "X_train.txt"))
+    # train.subj <- read.table(file.path("train", "subject_train.txt"))
+    # train.activity <- read.table(file.path("train", "y_train.txt"))
+
     train <- prepDataset("train")
     test <- prepDataset("test")
     full <- bind_rows(train, test)
     
     ## use activity names
-    ## normalize activity labels to lowercase with period (.) separators
-    activity.labels <- read.table("activity_labels.txt", col.names=c("id", "label"))
-    activity.labels$label <- tolower(gsub("_", ".", activity.labels$label))
-    full$activity <- factor(full$activity, levels=activity.labels$id, labels=activity.labels$label)
+    ## normalize activity labels to lowercase
+    activity.labels <- read.table("activity_labels.txt")
+    activity.labels[,2] <- tolower(activity.labels[,2])
+    full$activity <- factor(full$activity, levels=activity.labels[,1], labels=activity.labels[,2])
     
-    ## tidy data into long format
+    # convert to long tidy format by collecting all measurement columns
     full <- full %>%
         gather(measure, value, -subject, -activity, -point) %>%
-        separate(measure, into=c("measure", "statistic", "axis")) %>%
-        spread(statistic, value) %>%
-        arrange(subject, activity, measure, axis)
+        arrange(subject, activity, measure) %>%
+        select(subject, activity, measure, point, value)
     
-    ## decompose measurement variable names
-    full$domain <- ifelse(grepl("^f", full$measure), "freq", "time")
-    full$sensor <- ifelse(grepl("Acc", full$measure), "accelerometer", "gyroscope")
-    full$measuretype <- ifelse(grepl("Body", full$measure), "body", "gravity")
-    full$jerk <- grepl("Jerk", full$measure)
-    full$magnitude <- grepl("Mag", full$measure)  
-    full %>% select(subject:axis, domain:magnitude, mean:std)
+    # create mean and std columns
+    full <- full %>%
+        mutate(stat=ifelse(grepl("mean", measure), "mean", "std")) %>%
+        mutate(measure=gsub("-(mean|std)\\(\\)", "", measure)) %>%
+        spread(stat, value)
 }
 
 ## combined and tidied dataset
 har_full <- makeFullDataset()
-# average over points by subject, activity, and measurement variable
+
+## average over points by subject, activity, and measurement variable
 har_averages <- har_full %>% 
-    group_by(subject, activity, measure, axis, domain, sensor, measuretype, jerk, magnitude) %>% 
+    group_by(subject, activity, measure) %>%
     summarize(avg=mean(mean), std=sd(mean)) %>%
     rename(mean=avg)
