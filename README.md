@@ -1,4 +1,4 @@
-# Human Activity Recognition Using Smartphones Dataset (Tidy Version)
+# Human Activity Recognition Using Smartphones Dataset (_Long_ Tidy Version)
 
 A [tidy data] version of the
 [Human Activity Recognition Using Smartphones](HAR) (HAR) dataset,
@@ -6,7 +6,7 @@ implemented in [R].
 
 The enclosed files will download the original dataset and then create
 two data frames, `har_full` and `har_averages`. These variables hold
-_long_ tidy data formatted versions of the original dataset.
+__long__ tidy data formatted versions of the original dataset.
 
   * `har_full` - mean and std. dev. for every measure (see CodeBook.md) and timepoint by subject and activity
   * `har_averages` - average value of each measure over full time series, by subject and activity
@@ -37,9 +37,9 @@ is behavior is specified by the assignment instructions.
 
 ## Exploring the data
 
-In long tidy format, the data is easy to explore using ggplot2
-functions. For example, to look at the time signal for all activities
-for subject 1,
+**Note the data is in a long tidy format, not wide format**. In long
+tidy format, the data is easy to explore using ggplot2 functions. For
+example, to look at the time signal for all activities for subject 1,
 
 ```{r}
 library(ggplot2)
